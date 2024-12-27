@@ -1,0 +1,76 @@
+we wish to find an orthogonal matrix A that minimizes the loss function
+L(A)=\frac{1}{2} \sum_{i=1}^{n}a_{i} \left |\hat{W_{i} } -A\hat{V_{i}}     \right | ^2
+where a_{i} are a set of non-negative weights such that sum_{i=1}^{n}a_{i=1}, hat{V_{i}} are nonparallel reference vectors, and hat{W_{i} } are the corresponding observation vectors.
+The gain function is define by 
+g(A)=1-L(A)=\sum_{i=1}^{n}a_{i}  \hat{W_{i}^{T}}A \hat{V_i}  
+The loss function L(A) is at its minimum when the gain function g(A) is at its maximum. The gain function can be reformulated as:
+g(A)=\sum_{i=1}^{n}a_{i}tr(  \hat{W_{i}^{T}}A \hat{V_i}  )=tr(AB^T)
+where tr is the trace of a matrix, and B is the attitude profile matrix:
+B=\sum_{i=1}^{n}a_{i}\hat{W_i}\hat{V^{T}_{i}}
+The quaternion \bar{q}  representing a rotation is defined by Shuster as:
+\bar{q} = \begin{bmatrix}Q
+\\q
+\end{bmatrix}=\begin{bmatrix}\hat{X}sin(\frac{\theta }{2} ) 
+\\cos(\frac{\theta }{2} ) 
+\end{bmatrix}
+where hat{X} is the axis of rotation, and \theta is the angle of rotation about hat{X}
+Because the quaternion works as a versor, it must satisfy:
+\bar{q}^T\bar{q}=\left | Q \right | ^2+q^2=1
+The attitude matrix A is related to the quaternion by :
+\mathbf{A}(\overline{\mathbf{q}})=\left(q^{2}-\mathbf{Q} \cdot \mathbf{Q}\right) \mathbf{I}+2 \mathbf{Q} \mathbf{Q}^{T}+2 q\lfloor\mathbf{Q}\rfloor_{\times}
+where I is the identity matrix, and \lfloor\mathbf{Q}\rfloor_{\times} is the antisymmetric matrix of Q, a.k.a. the skew-symmetric matrix:
+\lfloor\mathbf{Q}\rfloor_{\times}=\begin{bmatrix}
+0  & Q_{3} & -Q_{2}\\
+-Q_{3}  & 0 & Q_{1}\\
+Q_{2} & -Q_{1} &0
+\end{bmatrix}
+Now the gain function can be rewritten again, but in terms of quaternions:
+g(\bar{q})=(q^2-Q \cdot Q)trB^{T}+2tr(QQ^TB^T)+2qtr(\lfloor\mathbf{Q}\rfloor_{\times}B^T)
+A further simplification gives:
+g(\bar{q})=\bar{q}^TK\bar{q}
+where the 4*4 matrix K is given by:
+K=\begin{bmatrix}S-\sigma I&Z
+\\
+Z^T  &\sigma
+\end{bmatrix}
+using the helper values:
+\sigma = trB
+S = B+B^T
+Z =\sum_{i=1}^{n}a_{i}\hat{W_i}\times \hat{V_{i}}
+A new gain function g'(\bar{q})with Lagrange multipliers is defined:
+g'(\bar{q})=\bar{q}^TK\bar{q}-\lambda\bar{q}^T\bar{q}
+It is verified that K\bar{q}=\lambda \bar{q}. Thus, g(\bar{q}) will be maximized if \bar{q}_opt is chosen to be the eigenvalue \lambda:
+\lambda = \sigma + Z \codt Y
+where Y is the Gibbs vector, a.k.a the Rodrigues vector, defined as:
+Y = \frac{Q}{q}=\hat{X}tan\frac{\theta}{2}
+rewriting the quaternion as:
+\bar{q} = \frac{1}{\sqrt{1+|Y|^2} }=\begin{bmatrix}Y
+\\1
+\end{bmatrix}
+Y and \bar{q} are representations of the optimal attitude solution when \lambda is equal to \lambda_max , leading to an equation for the eigenvalues:
+\lambda = \sigma + Z^{T} \frac{1}{(\lambda+\sigma)I-S}Z
+which is equivalent to the characteristic equation of the eigenvalues of K
+With the aid of Cayley-Hamilton theorem we can get rid of the Gibbs vector to find a more convenient expression of the characteristic equation:
+\lambda^{4}-(a+b)\lambda^{2}-c\lambda+(ab+c\sigma-d)=0
+where:
+a=\sigma^{2}-\kappa
+b = \sigma^{2}+Z^{T}Z
+c = \bigtriangleup +Z^{T}SZ
+d = Z^{T}S^{2}Z
+\sigma = \frac{1}{2}trS
+\kappa = tr(adj(S))
+\bigtriangleup = det(S)
+To find \lambda we implement the Newton-Raphson method using the sum of the weights a_{i} (in the beginning is constrained to be equal to 1) as a starting value.
+\lambda_{t+1}\gets \lambda_{t}-\frac{f(\lambda)}{f'(\lambda)}=\lambda_{t}-\frac{\lambda^{4}-(a+b)\lambda^{2}-c\lambda+(ab+c\sigma-d)}{4\lambda^{3}-2(a+b)\lambda-c}
+For sensor accuracies better than 1 arc-min(1 degree) the accuracy of a 64-bit word is exhausted after only one iteration.
+Finally, the optimal quaternion describing the attitude is found as:
+\bar{q}_{opt}=\frac{1}{\sqrt{\gamma^{2}+|X|^{2}}}\begin{bmatrix}X
+\\ \gamma
+\end{bmatrix}
+with:
+X = (\alpha I+\beta S+S^{2})Z
+\gamma = (\lambda+\sigma)\alpha-\bigtriangleup
+\alpha = \lambda^{2}-\sigma^{2}+\kappa
+\beta = \lambda - \sigma
+This solution can still lead to an indeterminant result if both \gamma and X vanish simultaneously. \gamma vanishes if and only if the angle of rotation is equal to \pi, even if 
+X does not vanish along.
