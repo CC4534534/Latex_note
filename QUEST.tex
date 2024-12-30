@@ -74,3 +74,40 @@ X = (\alpha I+\beta S+S^{2})Z
 \beta = \lambda - \sigma
 This solution can still lead to an indeterminant result if both \gamma and X vanish simultaneously. \gamma vanishes if and only if the angle of rotation is equal to \pi, even if 
 X does not vanish along.
+
+
+---------------------------------------------------------------------------------------------------------
+In 1965 Grace Wahba came up with a simple, yet very intuitive, way to describe the problem of finding a rotation between two coordinate systems.
+
+Given a set of N vector measurements u in the body coordinate system, an optimal attitude matrix A would minimize the loss function:
+L(A)=\frac{1}{2} \sum_{i=1}^{N}w_{i} \left |u_{i} -A\hat{v_{i}}     \right | ^2
+where u_{i} is the i-th vector measurement in the body frame, v_{i} is the i-th vector in the reference frame, and w_{i} are a set of N nonnegative weights for each observation. This famous formulation is known as Wahba’s problem.
+A first elegant solution was proposed by [Dav68] that solves this in terms of quaternions, yielding a unique optimal solution. The corresponding objective function is defined as:
+g(\mathbf{A})=1-L(\mathbf{A})=\sum_{i=1}^{N} w_{i} \mathbf{U}^{T} \mathbf{A} \mathbf{V}
+The objective function is at maximum when the loss function L(A) is at minimum. The goal is, then, to find the optimal attitude matrix A, which maximizes g(A). We first notice that:
+g(\mathbf{A})=\sum_{i=1}^{N} w_{i} \operatorname{tr}\left(\mathbf{U}_{i}^{T} \mathbf{A} \mathbf{V}_{i}\right)=\operatorname{tr}\left(\mathbf{A B}^{T}\right)
+where \operatorname{tr} denotes the trace of a matrix, and B is the attitude profile matrix:
+\mathbf{B}=\sum_{i=1}^{N} w_{i} \mathbf{U V}
+Now, we must parametrize the attitude matrix in terms of a quaternion q [Ler78] :
+\mathbf{A}(\mathbf{q})=\left(q_{w}^{2}-\mathbf{q}_{v} \cdot \mathbf{q}_{v}\right) \mathbf{I}_{3}+2 \mathbf{q}_{v} \mathbf{q}_{v}^{T}-2 q_{w}\lfloor\mathbf{q}\rfloor_{\times}
+where I_{3} is a 3x3 identity matrix, and the expression \lfloor\mathbf{q}\rfloor_{\times} is the skew-symmetric matrix of a vector q.
+The objective function, in terms of quaternion, becomes:
+g(\mathbf{q})=\left(q_{w}^{2}-\mathbf{q}_{v} \cdot \mathbf{q}_{v}\right) \operatorname{tr} \mathbf{B}^{T}+2 \operatorname{tr}\left(\mathbf{q}_{v} \mathbf{q}_{v}^{T} \mathbf{B}^{T}\right)+2 q_{w} \operatorname{tr}\left(\lfloor\mathbf{q}\rfloor_{\times} \mathbf{B}^{T}\right)
+A simpler expression, using helper quantities, can be a bilinear relationship of the form:
+g(\mathbf{q})=\mathbf{q}^{T} \mathbf{K q}
+where the 4x4 matrix K is built with:
+\mathbf{K}=\left[\begin{array}{cc}
+    \sigma & \mathbf{z}^{T} \\
+    \mathbf{z} & \mathbf{S}-\sigma \mathbf{I}_{3}
+    \end{array}\right] \\
+    using the intermediate values:
+    \sigma=\operatorname{tr} \mathbf{B} \\
+    \mathbf{S}=\mathbf{B}+\mathbf{B}^{T} \\
+    \mathbf{z}=\left[\begin{array}{l}
+    B_{23}-B_{32} \\
+    B_{31}-B_{13} \\
+    B_{12}-B_{21}
+    \end{array}\right] \\
+The optimal quaternion \hat{q}, which parametrizes the optimal attitude matrix, is an eigenvector of K. With the help of Lagrange multipliers, g(q) is maximized if the eigenvector corresponding to the largest eigenvalue \lambda is chosen.
+
+
